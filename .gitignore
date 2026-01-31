@@ -122,7 +122,6 @@ coverage.xml
 # Build Artifacts
 # ========================
 *.manifest
-*.spec
 *.exe
 *.dll
 *.so
@@ -132,6 +131,7 @@ coverage.xml
 dist/
 build/
 *.spec
+!IOC-Threat-Scanner.spec
 
 # ========================
 # Logs & Temp Files
