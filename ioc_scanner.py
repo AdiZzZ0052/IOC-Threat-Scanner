@@ -2,17 +2,28 @@
 IOC Threat Scanner - Professional Threat Intelligence Platform
 Author: Adi Cohen
 License: MIT
-Version: 1.0.0
-Repository: https://github.com/AdiZzZ0052/AdiZzZ0052
+Version: 1.0.2
+Repository: https://github.com/AdiZzZ0052/IOC-Threat-Scanner
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "Adi Cohen"
 __license__ = "MIT"
 
 import sys
-import subprocess
 import os
+import multiprocessing
+
+# ===================== CRITICAL: FREEZE SUPPORT FOR EXE =====================
+# This MUST be at the very top, before any other code runs
+# Prevents infinite process spawning when running as frozen EXE
+if __name__ == "__main__":
+    multiprocessing.freeze_support()
+
+# Check if we're running as a frozen executable (PyInstaller)
+IS_FROZEN = getattr(sys, 'frozen', False)
+
+import subprocess
 import json
 import re
 import base64
@@ -22,7 +33,7 @@ import webbrowser
 import email
 import threading
 import time
-import socket 
+import socket
 from datetime import datetime, timedelta
 import traceback
 import math
@@ -31,7 +42,13 @@ import hashlib
 import html as html_lib  # For HTML escaping
 
 # ===================== AUTO-INSTALLER =====================
+# Only run auto-installer when NOT frozen (not running as EXE)
+# This prevents subprocess spawning issues in PyInstaller builds
 def install_dependencies():
+    # Skip if running as frozen EXE - dependencies are bundled
+    if IS_FROZEN:
+        return
+
     requirements = ["PyQt6", "requests", "duckduckgo-search", "bytez"]
     for package in requirements:
         try:
@@ -1301,8 +1318,16 @@ class IOCScannerApp(QMainWindow):
         self.e_out.setText("AI Analyzing..."); self.pw = PhishWorker(self.e_in.toPlainText(), self.ai)
         self.pw.done.connect(self.e_out.setText); self.pw.start()
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for the application."""
+    # Ensure multiprocessing works correctly in frozen executables
+    multiprocessing.freeze_support()
+
     app = QApplication(sys.argv)
     window = IOCScannerApp()
     window.show()
     sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
