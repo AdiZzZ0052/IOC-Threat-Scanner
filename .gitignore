@@ -1,0 +1,185 @@
+# IOC Threat Scanner - Git Ignore File
+
+# ========================
+# SECURITY - NEVER COMMIT
+# ========================
+# Configuration files (contain API keys!)
+ioc_scanner_config.json
+*config*.json
+*.key
+*.pem
+*.env
+.env
+.env.*
+
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ========================
+# Virtual Environments
+# ========================
+venv/
+ENV/
+env/
+.venv/
+.ENV/
+env.bak/
+venv.bak/
+
+# ========================
+# IDEs and Editors
+# ========================
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# ========================
+# OS Generated
+# ========================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ========================
+# Testing & Coverage
+# ========================
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# ========================
+# Build Artifacts
+# ========================
+*.manifest
+*.spec
+*.exe
+*.dll
+*.so
+*.dylib
+
+# PyInstaller
+dist/
+build/
+*.spec
+
+# ========================
+# Logs & Temp Files
+# ========================
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+logs/
+temp/
+tmp/
+
+# ========================
+# Documentation
+# ========================
+docs/_build/
+site/
+
+# ========================
+# Jupyter Notebooks
+# ========================
+.ipynb_checkpoints/
+*.ipynb
+
+# ========================
+# Package Management
+# ========================
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ========================
+# Type Checkers
+# ========================
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+
+# ========================
+# Project Specific
+# ========================
+# Scan results exports
+exports/
+reports/
+*.html
+!README.md
+
+# Test data (may contain sensitive IOCs)
+test_data/
+sample_emails/

@@ -1,0 +1,92 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ioc-threat-scanner"
+version = "1.0.1"
+description = "Professional IOC Threat Intelligence Platform"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Adi Cohen", email = "adi.cohen@example.com"}
+]
+maintainers = [
+    {name = "Adi Cohen", email = "adi.cohen@example.com"}
+]
+keywords = [
+    "ioc", "threat-intelligence", "security", "malware",
+    "virustotal", "abuseipdb", "otx", "soc", "incident-response",
+    "cybersecurity", "threat-hunting", "phishing-detection"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: X11 Applications :: Qt",
+    "Environment :: Win32 (MS Windows)",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "PyQt6>=6.4.0",
+    "requests>=2.28.0",
+    "duckduckgo-search>=3.0.0",
+    "bytez>=0.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-qt>=4.2.0",
+    "pytest-cov>=4.0.0",
+    "flake8>=6.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+    "bandit>=1.7.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/AdiZzZ0052/IOC-Threat-Scanner"
+Documentation = "https://github.com/AdiZzZ0052/IOC-Threat-Scanner#readme"
+Repository = "https://github.com/AdiZzZ0052/IOC-Threat-Scanner"
+Issues = "https://github.com/AdiZzZ0052/IOC-Threat-Scanner/issues"
+LinkedIn = "https://www.linkedin.com/in/adi-cohen-ac/"
+
+[project.scripts]
+ioc-scanner = "ioc_scanner:main"
+
+[project.gui-scripts]
+ioc-scanner-gui = "ioc_scanner:main"
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "-v --cov=ioc_scanner --cov-report=html"
+
+[tool.bandit]
+exclude_dirs = ["tests", "venv"]
+skips = ["B101"]  # Skip assert warnings in tests

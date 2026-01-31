@@ -1,0 +1,19 @@
+# IOC Threat Scanner - Dependencies
+# Install with: pip install -r requirements.txt
+
+# GUI Framework
+PyQt6>=6.4.0
+
+# HTTP Requests
+requests>=2.28.0
+
+# Web Search (for additional lookups)
+duckduckgo-search>=3.0.0
+
+# AI Analysis Engine
+bytez>=0.1.0
+
+# Note: The following are part of Python standard library (no install needed):
+# - hashlib, json, re, base64, urllib.parse, ipaddress
+# - webbrowser, email, threading, socket, datetime
+# - os, sys, subprocess, concurrent.futures, math, html
