@@ -2,11 +2,11 @@
 IOC Threat Scanner - Professional Threat Intelligence Platform
 Author: Adi Cohen
 License: MIT
-Version: 1.0.2
+Version: 1.0.6
 Repository: https://github.com/AdiZzZ0052/IOC-Threat-Scanner
 """
 
-__version__ = "1.0.2"
+__version__ = "1.0.6"
 __author__ = "Adi Cohen"
 __license__ = "MIT"
 
@@ -43,16 +43,14 @@ import html as html_lib  # For HTML escaping
 
 # ===================== AUTO-INSTALLER =====================
 # Only run auto-installer when NOT frozen (not running as EXE)
-# This prevents subprocess spawning issues in PyInstaller builds
 def install_dependencies():
-    # Skip if running as frozen EXE - dependencies are bundled
     if IS_FROZEN:
         return
 
-    requirements = ["PyQt6", "requests", "duckduckgo-search", "bytez"]
+    requirements = ["PyQt6", "requests", "bytez"]
     for package in requirements:
         try:
-            module_name = package.replace("-", "_").replace("duckduckgo_search", "duckduckgo_search")
+            module_name = package.replace("-", "_")
             __import__(module_name)
         except ImportError:
             try:
@@ -62,12 +60,12 @@ def install_dependencies():
 install_dependencies()
 
 try:
-    from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-                                QHBoxLayout, QLabel, QLineEdit, QTextEdit, QTextBrowser, QPushButton, 
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
+                                QHBoxLayout, QLabel, QLineEdit, QTextEdit, QTextBrowser, QPushButton,
                                 QTabWidget, QProgressBar, QFrame, QMessageBox, QFileDialog,
                                 QScrollArea, QSizePolicy, QSplitter, QDialog, QFormLayout, QComboBox)
     from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QTimer, QRectF, QMimeData
-    from PyQt6.QtGui import (QColor, QFont, QIcon, QPalette, QBrush, QLinearGradient, 
+    from PyQt6.QtGui import (QColor, QFont, QIcon, QPalette, QBrush, QLinearGradient,
                              QTextCursor, QPainter, QPainterPath, QPen, QGuiApplication)
     import requests
 except ImportError:
@@ -88,14 +86,14 @@ def sanitize_ioc(ioc):
     """
     if not ioc:
         return None
-    
+
     # Convert to string and strip whitespace
     ioc = str(ioc).strip()
-    
+
     # Length validation (reasonable limit)
     if len(ioc) > 256:
         return None
-    
+
     # Remove dangerous characters that could be used for injection
     dangerous_chars = [
         '\n', '\r', '\0',  # Newlines and null bytes
@@ -104,11 +102,11 @@ def sanitize_ioc(ioc):
         '`', '$', '(', ')',  # Command substitution
         '{', '}', '[', ']'   # Additional risky chars
     ]
-    
+
     for char in dangerous_chars:
         if char in ioc:
             return None
-    
+
     return ioc
 
 def escape_html(text):
@@ -151,11 +149,11 @@ def is_locked_out():
     lockout_str = CONFIG.get("LOCKOUT_UNTIL", "")
     if not lockout_str:
         return False, 0
-    
+
     try:
         lockout_time = datetime.fromisoformat(lockout_str)
         now = datetime.now()
-        
+
         if now < lockout_time:
             remaining = (lockout_time - now).total_seconds()
             return True, int(remaining)
@@ -173,12 +171,12 @@ def is_locked_out():
 def record_failed_attempt():
     """Record a failed login attempt and apply lockout if needed"""
     CONFIG["FAILED_ATTEMPTS"] = CONFIG.get("FAILED_ATTEMPTS", 0) + 1
-    
+
     if CONFIG["FAILED_ATTEMPTS"] >= 10:
         lockout_time = datetime.now() + timedelta(minutes=30)
         CONFIG["LOCKOUT_UNTIL"] = lockout_time.isoformat()
         CONFIG["FAILED_ATTEMPTS"] = 0
-    
+
     save_config_file()
     return CONFIG.get("FAILED_ATTEMPTS", 0)
 
@@ -209,23 +207,23 @@ def save_config_file():
         config_dir = os.path.dirname(CONFIG_FILE)
         if config_dir and not os.path.exists(config_dir):
             os.makedirs(config_dir, exist_ok=True)
-        
+
         with open(CONFIG_FILE, 'w') as f:
             json.dump(CONFIG, f, indent=4)
-        
+
         try:
             if os.name != 'nt':
                 os.chmod(CONFIG_FILE, 0o600)
         except:
             pass
-        
+
         return True
-        
+
     except PermissionError as e:
         print(f"Permission Error: {e}")
         print(f"Config file location: {CONFIG_FILE}")
         return False
-        
+
     except Exception as e:
         print(f"Error saving config: {e}")
         print(f"Config file location: {CONFIG_FILE}")
@@ -235,8 +233,8 @@ load_config()
 
 # ===================== DATA DICTIONARIES =====================
 PORT_DATA = {
-    "20": "FTP Data", "21": "FTP Control", "22": "SSH", "23": "Telnet", "25": "SMTP", 
-    "53": "DNS", "80": "HTTP", "443": "HTTPS", "445": "SMB", "3389": "RDP", 
+    "20": "FTP Data", "21": "FTP Control", "22": "SSH", "23": "Telnet", "25": "SMTP",
+    "53": "DNS", "80": "HTTP", "443": "HTTPS", "445": "SMB", "3389": "RDP",
     "8080": "HTTP Proxy", "8443": "HTTPS Alt"
 }
 
@@ -253,26 +251,26 @@ class LocalAIAnalyst:
     def __init__(self):
         self.client = None
         self.reload()
-        
+
     def reload(self):
         if CONFIG.get("BYTEZ_API_KEY") and BYTEZ_AVAILABLE:
-            try: 
+            try:
                 self.client = Bytez(CONFIG.get("BYTEZ_API_KEY"))
-            except: 
+            except:
                 self.client = None
-    
+
     def summarize(self, text, ioc):
-        if not self.client: 
+        if not self.client:
             return "AI Config Missing."
-        
+
         # SECURITY: Sanitize IOC to prevent prompt injection
         safe_ioc = sanitize_ioc(ioc)
         if not safe_ioc:
             return "Invalid IOC format"
-        
+
         # SECURITY: Limit text size
         safe_text = str(text)[:3000]
-        
+
         try:
             model = self.client.model("mistralai/Mistral-7B-Instruct-v0.3")
             prompt = f"""[INST] Analyze this IOC: {safe_ioc}
@@ -280,33 +278,33 @@ Context: {safe_text}
 Task: Write ONE professional sentence describing what this IP/Domain IS and its Function.
 Do NOT use flowery language. Be direct.
 [/INST]"""
-            resp = model.run(prompt, params={"max_new_tokens": 80}) 
+            resp = model.run(prompt, params={"max_new_tokens": 80})
             out = str(resp)
-            if hasattr(resp, 'output') and resp.output: 
+            if hasattr(resp, 'output') and resp.output:
                 out = resp.output
-            if "Rate limited" in out: 
+            if "Rate limited" in out:
                 return "AI Busy."
-            if "[/INST]" in out: 
+            if "[/INST]" in out:
                 out = out.split('[/INST]')[-1]
             return f"AI Analysis: {out.strip()}"
-        except Exception as e: 
+        except Exception as e:
             return "AI Error occurred"
-    
+
     def phish(self, text):
-        if not self.client: 
+        if not self.client:
             return "AI Config Missing."
-        
+
         # SECURITY: Limit input size
         safe_text = str(text)[:2000]
-        
+
         try:
             model = self.client.model("mistralai/Mistral-7B-Instruct-v0.3")
             resp = model.run(f"[INST] Phishing Analysis. Verdict & Score.\n{safe_text}\n[/INST]", params={"max_new_tokens": 300})
             out = str(resp)
-            if hasattr(resp, 'output') and resp.output: 
+            if hasattr(resp, 'output') and resp.output:
                 out = resp.output
             return out.split('[/INST]')[-1].strip()
-        except Exception as e: 
+        except Exception as e:
             return "AI Error occurred"
 
 # ===================== UTILS =====================
@@ -324,22 +322,22 @@ def detect_type(ioc):
 
 # ===================== API QUERIES (SECURED) =====================
 def q_vt(ioc):
-    if not CONFIG["VT_API_KEY"]: 
+    if not CONFIG["VT_API_KEY"]:
         return "VirusTotal: Key Missing", "", {}
-    
+
     # SECURITY: Sanitize input
     safe_ioc = sanitize_ioc(ioc)
     if not safe_ioc:
         return "VirusTotal: Invalid IOC format", "", {}
-    
+
     # SECURITY: URL encode to prevent injection
     encoded_ioc = urllib.parse.quote(safe_ioc)
     link = f"https://www.virustotal.com/gui/search/{encoded_ioc}"
-    
+
     try:
         r = requests.get(
-            f"https://www.virustotal.com/api/v3/search?query={encoded_ioc}", 
-            headers={"x-apikey": CONFIG["VT_API_KEY"]}, 
+            f"https://www.virustotal.com/api/v3/search?query={encoded_ioc}",
+            headers={"x-apikey": CONFIG["VT_API_KEY"]},
             timeout=5,
             verify=True
         )
@@ -349,38 +347,38 @@ def q_vt(ioc):
             score = f"{stats.get('malicious', 0)}/{sum(stats.values())}"
             dets = {}
             for k,v in d.get('last_analysis_results', {}).items():
-                if v['category'] == 'malicious': 
+                if v['category'] == 'malicious':
                     # SECURITY: Escape HTML output
                     dets[escape_html(k)] = escape_html(v['result'])
-            
+
             return f'VirusTotal: Scan Score {escape_html(score)} | <a href="{link}" style="color:#667eea; text-decoration:none;">Scan link</a>', f"VirusTotal Score: {score}", {'detections': dets}
-    except: 
+    except:
         pass
-    
+
     return f'VirusTotal: N/A | <a href="{link}" style="color:#667eea; text-decoration:none;">Scan link</a>', "VirusTotal: N/A", {}
 
 def q_abuse(ioc):
-    if not CONFIG["ABUSEIPDB_API_KEY"]: 
+    if not CONFIG["ABUSEIPDB_API_KEY"]:
         return "AbuseIPDB: Key Missing", "", {}
-    
+
     # SECURITY: Sanitize input
     safe_ioc = sanitize_ioc(ioc)
     if not safe_ioc:
         return "AbuseIPDB: Invalid IP format", "", {}
-    
+
     # Additional validation: Must be valid IP
     try:
         ipaddress.ip_address(safe_ioc)
     except:
         return "AbuseIPDB: Invalid IP address", "", {}
-    
+
     encoded_ioc = urllib.parse.quote(safe_ioc)
     link = f"https://www.abuseipdb.com/check/{encoded_ioc}"
-    
+
     try:
         r = requests.get(
-            f"https://api.abuseipdb.com/api/v2/check?ipAddress={encoded_ioc}&maxAgeInDays=90&verbose=", 
-            headers={'Key': CONFIG["ABUSEIPDB_API_KEY"]}, 
+            f"https://api.abuseipdb.com/api/v2/check?ipAddress={encoded_ioc}&maxAgeInDays=90&verbose=",
+            headers={'Key': CONFIG["ABUSEIPDB_API_KEY"]},
             timeout=5,
             verify=True
         )
@@ -389,49 +387,49 @@ def q_abuse(ioc):
             cats = set()
             for rep in d.get('reports', []):
                 for c in rep.get('categories', []):
-                    if c in ABUSEIPDB_CATEGORIES: 
+                    if c in ABUSEIPDB_CATEGORIES:
                         cats.add(ABUSEIPDB_CATEGORIES[c])
-            
+
             details = {
                 'score': d['abuseConfidenceScore'],
                 'reports': d['totalReports'],
                 'last': escape_html(str(d['lastReportedAt'])),
                 'cats': [escape_html(c) for c in list(cats)[:5]]
             }
-            
+
             score = escape_html(str(d["abuseConfidenceScore"]))
             return f'AbuseIPDB: Scan Score {score}/100 | <a href="{link}" style="color:#667eea; text-decoration:none;">Scan link</a>', f"AbuseIPDB Score: {d['abuseConfidenceScore']}", details
-    except: 
+    except:
         pass
-    
+
     return f'AbuseIPDB: N/A | <a href="{link}" style="color:#667eea; text-decoration:none;">Scan link</a>', "AbuseIPDB: N/A", {}
 
 def q_otx(ioc):
-    if not CONFIG["OTX_API_KEY"]: 
+    if not CONFIG["OTX_API_KEY"]:
         return "OTX: Key Missing", "", {}
-    
+
     # SECURITY: Sanitize input
     safe_ioc = sanitize_ioc(ioc)
     if not safe_ioc:
         return "OTX: Invalid IOC format", "", {}
-    
+
     t = detect_type(safe_ioc)
-    if t == "ipv4": 
+    if t == "ipv4":
         ep = f"IPv4/{safe_ioc}/general"; url_type = "ip"
-    elif t == "ipv6": 
+    elif t == "ipv6":
         ep = f"IPv6/{safe_ioc}/general"; url_type = "ip"
-    elif t == "hash": 
+    elif t == "hash":
         ep = f"file/{safe_ioc}/general"; url_type = "file"
-    else: 
+    else:
         ep = f"domain/{safe_ioc}/general"; url_type = "domain"
-    
+
     encoded_ioc = urllib.parse.quote(safe_ioc)
     link = f"https://otx.alienvault.com/indicator/{url_type}/{encoded_ioc}"
-    
+
     try:
         r = requests.get(
-            f"https://otx.alienvault.com/api/v1/indicators/{ep}", 
-            headers={'X-OTX-API-KEY': CONFIG["OTX_API_KEY"]}, 
+            f"https://otx.alienvault.com/api/v1/indicators/{ep}",
+            headers={'X-OTX-API-KEY': CONFIG["OTX_API_KEY"]},
             timeout=5,
             verify=True
         )
@@ -441,9 +439,9 @@ def q_otx(ioc):
             count = d.get('pulse_info', {}).get('count', 0)
             txt = "Found in 0 pulses" if count == 0 else f"Found in {count} pulses"
             return f'AlienVault OTX: {escape_html(txt)} | <a href="{link}" style="color:#667eea; text-decoration:none;">Scan link</a>', f"OTX: {count} pulses", {'pulses': pulses}
-    except: 
+    except:
         pass
-    
+
     return f'AlienVault OTX: N/A | <a href="{link}" style="color:#667eea; text-decoration:none;">Scan link</a>', "OTX: N/A", {}
 
 def q_yeti(ioc):
@@ -455,21 +453,21 @@ def q_yeti(ioc):
     return f'ThreatYeti: <a href="{link}" style="color:#667eea; text-decoration:none;">Scan link</a>', "", {}
 
 def q_hybrid(ioc):
-    if not CONFIG.get("HYBRID_API_KEY"): 
+    if not CONFIG.get("HYBRID_API_KEY"):
         return "", "", {}
-    
+
     safe_ioc = sanitize_ioc(ioc)
     if not safe_ioc:
         return "", "", {}
-    
+
     headers = {'User-Agent': 'Falcon Sandbox', 'api-key': CONFIG["HYBRID_API_KEY"]}
     encoded_ioc = urllib.parse.quote(safe_ioc)
     link = f"https://www.hybrid-analysis.com/search?query={encoded_ioc}"
-    
+
     try:
         r = requests.get(
-            f"https://www.hybrid-analysis.com/api/v2/quick-scan/{safe_ioc}", 
-            headers=headers, 
+            f"https://www.hybrid-analysis.com/api/v2/quick-scan/{safe_ioc}",
+            headers=headers,
             timeout=8,
             verify=True
         )
@@ -479,19 +477,19 @@ def q_hybrid(ioc):
                 link = f"https://www.hybrid-analysis.com/sample/{encoded_ioc}"
                 score = escape_html(str(d.get('threat_score')))
                 return f'Hybrid Analysis: Threat Score {score}/100 | <a href="{link}" style="color:#667eea; text-decoration:none;">Scan link</a>', f"Hybrid Score: {d.get('threat_score')}", {}
-    except: 
+    except:
         pass
-    
+
     return f'Hybrid Analysis: N/A | <a href="{link}" style="color:#667eea; text-decoration:none;">Scan link</a>', "", {}
 
 def q_urlscan(ioc):
-    if not CONFIG.get("URLSCAN_API_KEY"): 
+    if not CONFIG.get("URLSCAN_API_KEY"):
         return "", "", {}
-    
+
     safe_ioc = sanitize_ioc(ioc)
     if not safe_ioc:
         return "", "", {}
-    
+
     encoded_ioc = urllib.parse.quote(safe_ioc)
     link = f"https://urlscan.io/search#{encoded_ioc}"
     return f'URLScan.io: <a href="{link}" style="color:#667eea; text-decoration:none;">Scan link</a>', "", {}
@@ -500,34 +498,59 @@ def q_whois(ioc):
     safe_ioc = sanitize_ioc(ioc)
     if not safe_ioc:
         return "", "", {}
-    
+
     encoded_ioc = urllib.parse.quote(safe_ioc)
     link = f"https://who.is/whois/{encoded_ioc}"
     return f'WHOIS Record: <a href="{link}" style="color:#667eea; text-decoration:none;">Scan link</a>', "", {}
 
 def q_geo(ioc):
-    # SECURITY: Sanitize input
+    """
+    SECURITY FIX: Uses passive DNS for domains to avoid direct connections
+    Output format is identical to previous version
+    """
     safe_ioc = sanitize_ioc(ioc)
     if not safe_ioc:
         return "", ""
-    
-    target = safe_ioc
+
     t = detect_type(safe_ioc)
-    
+    target = None
+
+    # For domains: Get IP from VirusTotal passive DNS (NO direct DNS lookup!)
     if t == 'domain':
-        try: 
-            target = socket.gethostbyname(safe_ioc)
-        except: 
-            return "", ""
-    
+        if CONFIG.get("VT_API_KEY"):
+            try:
+                r = requests.get(
+                    f"https://www.virustotal.com/api/v3/domains/{safe_ioc}",
+                    headers={"x-apikey": CONFIG["VT_API_KEY"]},
+                    timeout=5,
+                    verify=True
+                )
+                if r.status_code == 200:
+                    d = r.json()
+                    last_dns = d.get('data', {}).get('attributes', {}).get('last_dns_records', [])
+                    for record in last_dns:
+                        if record.get('type') == 'A':
+                            target = record.get('value')
+                            break
+            except:
+                pass
+
+    # For IPs: Use directly (no DNS lookup needed)
+    elif t in ['ipv4', 'ipv6']:
+        target = safe_ioc
+
+    # If no target resolved, return empty (same as before)
+    if not target:
+        return "", ""
+
+    # Query geo API
     try:
         r = requests.get(
-            f"http://ip-api.com/json/{target}?fields=status,country,city,isp,org,as", 
+            f"http://ip-api.com/json/{target}?fields=status,country,city,isp,org,as",
             timeout=3
         )
         if r.status_code == 200:
             d = r.json()
-            # SECURITY: Escape all output
             html = [
                 "<br><b>IP Address Information:</b>",
                 f"IP Address: {escape_html(target)}",
@@ -539,15 +562,15 @@ def q_geo(ioc):
             ]
             raw = f"Location: {d.get('country','N/A')}, ISP: {d.get('isp','N/A')}, Org: {d.get('org','N/A')}"
             return "<br>".join(html), raw
-    except: 
+    except:
         pass
-    
+
     return "", ""
 
 def build_report(results, details):
     html = "<br>".join(results)
     sep = "=" * 60
-    
+
     if 'virustotal' in details and details['virustotal'].get('detections'):
         html += f"<br><br>{sep}<br><b>VIRUSTOTAL DETECTION DETAILS</b><br>{sep}<br><br>Antivirus Detections:"
         for k,v in list(details['virustotal']['detections'].items())[:5]:
@@ -580,16 +603,16 @@ def build_report(results, details):
 
 # ===================== SCAN REPORT GENERATOR =====================
 def generate_scan_report(ioc):
-    if not ioc: 
+    if not ioc:
         return "Error: No IOC", ""
-    
+
     # SECURITY: Validate IOC before processing
     safe_ioc = sanitize_ioc(ioc)
     if not safe_ioc:
         return "Error: Invalid IOC format. Please enter a valid IP, domain, or hash.", ""
-    
+
     t = detect_type(safe_ioc)
-    
+
     res_html = []
     ai_context_list = []
     det_map = {}
@@ -597,13 +620,13 @@ def generate_scan_report(ioc):
     with concurrent.futures.ThreadPoolExecutor() as ex:
         f_vt = ex.submit(q_vt, safe_ioc)
         f_otx = ex.submit(q_otx, safe_ioc)
-        
+
         f_yeti = None
-        if t != "hash": 
+        if t != "hash":
             f_yeti = ex.submit(q_yeti, safe_ioc)
-        
+
         f_hybrid = None
-        if t == "hash": 
+        if t == "hash":
             f_hybrid = ex.submit(q_hybrid, safe_ioc)
 
         f_whois = None
@@ -615,7 +638,7 @@ def generate_scan_report(ioc):
         f_ab = None
         f_geo = None
         if t == "ipv4" or t == "ipv6" or t == "domain":
-            if t != "domain": 
+            if t != "domain":
                 f_ab = ex.submit(q_abuse, safe_ioc)
             f_geo = ex.submit(q_geo, safe_ioc)
 
@@ -623,13 +646,13 @@ def generate_scan_report(ioc):
         res_html.append(vt_h)
         if vt_raw: ai_context_list.append(vt_raw)
         if vt_d: det_map['virustotal'] = vt_d
-        
+
         if f_ab:
             ab_h, ab_raw, ab_d = f_ab.result()
             res_html.append(ab_h)
             if ab_raw: ai_context_list.append(ab_raw)
             if ab_d: det_map['abuseipdb'] = ab_d
-        
+
         otx_h, otx_raw, otx_d = f_otx.result()
         res_html.append(otx_h)
         if otx_raw: ai_context_list.append(otx_raw)
@@ -639,14 +662,14 @@ def generate_scan_report(ioc):
             hy_h, hy_raw, _ = f_hybrid.result()
             if hy_h:
                 res_html.append(hy_h)
-            if hy_raw: 
+            if hy_raw:
                 ai_context_list.append(hy_raw)
 
         if f_yeti:
             yeti_result = f_yeti.result()
             if yeti_result and yeti_result[0]:
                 res_html.append(yeti_result[0])
-        
+
         if f_urlscan:
             urlscan_result = f_urlscan.result()
             if urlscan_result and urlscan_result[0]:
@@ -659,9 +682,9 @@ def generate_scan_report(ioc):
 
         if f_geo:
             geo_h, geo_raw = f_geo.result()
-            if geo_h: 
+            if geo_h:
                 res_html.append(geo_h)
-            if geo_raw: 
+            if geo_raw:
                 ai_context_list.append(geo_raw)
 
     full_html = build_report(res_html, det_map)
@@ -670,8 +693,8 @@ def generate_scan_report(ioc):
 
 # ===================== WORKERS =====================
 class ScanWorker(QThread):
-    fast_sig = pyqtSignal(str) 
-    slow_sig = pyqtSignal(str) 
+    fast_sig = pyqtSignal(str)
+    slow_sig = pyqtSignal(str)
 
     def __init__(self, ioc, ai):
         super().__init__()
@@ -682,13 +705,13 @@ class ScanWorker(QThread):
         try:
             html_report, raw_text_for_ai = generate_scan_report(self.ioc)
             self.fast_sig.emit(html_report)
-            
+
             ai_res = self.ai.summarize(raw_text_for_ai, self.ioc)
             sep = "=" * 60
             # SECURITY: Escape AI output
             ai_html = f'<br><br>{sep}<br><span style="font-family:Segoe UI; font-size:14px;">{escape_html(ai_res)}</span><br>{sep}'
             self.slow_sig.emit(ai_html)
-            
+
         except Exception as e:
             self.fast_sig.emit("Scan error occurred. Please check your input.")
 
@@ -705,7 +728,7 @@ class BulkScanWorker(QThread):
     def run(self):
         total = len(self.iocs)
         for i, ioc in enumerate(self.iocs):
-            if not self.running: 
+            if not self.running:
                 break
             try:
                 html_report, _ = generate_scan_report(ioc)
@@ -715,7 +738,7 @@ class BulkScanWorker(QThread):
                 self.progress.emit(int(((i + 1) / total) * 100))
             except Exception as e:
                 self.update.emit(f"<br>Error scanning {escape_html(ioc)}: Scan failed")
-        
+
         self.finished.emit()
 
     def stop(self):
@@ -740,9 +763,9 @@ class PasswordDialog(QDialog):
         self.resize(450, 280)
         self.is_first_time = is_first_time
         self.password_hash = None
-        
+
         self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.CustomizeWindowHint | Qt.WindowType.WindowTitleHint)
-        
+
         self.setStyleSheet("""
             QDialog { background-color: #121218; color: white; }
             QLabel { color: #e9d5ff; font-size: 14px; }
@@ -757,51 +780,51 @@ class PasswordDialog(QDialog):
             QPushButton#ExitBtn { background-color: #2d3555; border: 1px solid #4d5d96; }
             QPushButton#ExitBtn:hover { background-color: #3d4565; }
         """)
-        
+
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
-        
+
         if not is_first_time:
             locked, remaining = is_locked_out()
             if locked:
                 self.show_lockout_screen(layout, remaining)
                 return
-        
+
         if is_first_time:
             title = QLabel("🔒 Welcome to IOC Scanner")
             title.setObjectName("Title")
             layout.addWidget(title)
-            
+
             info = QLabel("Please create a password to protect your API keys and configuration.")
             info.setWordWrap(True)
             layout.addWidget(info)
-            
+
             warning = QLabel("⚠️ Important: Remember this password! There is no recovery option.")
             warning.setObjectName("Warning")
             warning.setWordWrap(True)
             layout.addWidget(warning)
-            
+
             layout.addWidget(QLabel("New Password (minimum 8 characters):"))
             self.pass_input = QLineEdit()
             self.pass_input.setEchoMode(QLineEdit.EchoMode.Password)
             self.pass_input.setPlaceholderText("Enter strong password...")
             layout.addWidget(self.pass_input)
-            
+
             layout.addWidget(QLabel("Confirm Password:"))
             self.pass_confirm = QLineEdit()
             self.pass_confirm.setEchoMode(QLineEdit.EchoMode.Password)
             self.pass_confirm.setPlaceholderText("Re-enter password...")
             self.pass_confirm.returnPressed.connect(self.verify)
             layout.addWidget(self.pass_confirm)
-            
+
         else:
             title = QLabel("🔒 IOC Scanner - Authentication")
             title.setObjectName("Title")
             layout.addWidget(title)
-            
+
             info = QLabel("Enter your password to access the application.")
             layout.addWidget(info)
-            
+
             failed_attempts = CONFIG.get("FAILED_ATTEMPTS", 0)
             if failed_attempts > 0:
                 remaining_attempts = 10 - failed_attempts
@@ -812,35 +835,35 @@ class PasswordDialog(QDialog):
                 attempt_warning.setObjectName("Attempts")
                 attempt_warning.setWordWrap(True)
                 layout.addWidget(attempt_warning)
-            
+
             layout.addWidget(QLabel("Password:"))
             self.pass_input = QLineEdit()
             self.pass_input.setEchoMode(QLineEdit.EchoMode.Password)
             self.pass_input.setPlaceholderText("Enter password...")
             self.pass_input.returnPressed.connect(self.verify)
             layout.addWidget(self.pass_input)
-        
+
         btn_text = "Create Password & Continue" if is_first_time else "Unlock"
         btn = QPushButton(btn_text)
         btn.clicked.connect(self.verify)
         layout.addWidget(btn)
-        
+
         if not is_first_time:
             exit_btn = QPushButton("Exit Application")
             exit_btn.setObjectName("ExitBtn")
             exit_btn.clicked.connect(self.reject_and_exit)
             layout.addWidget(exit_btn)
-        
+
         layout.addStretch()
-    
+
     def show_lockout_screen(self, layout, remaining_seconds):
         title = QLabel("🔒 Account Locked")
         title.setObjectName("Title")
         layout.addWidget(title)
-        
+
         minutes = remaining_seconds // 60
         seconds = remaining_seconds % 60
-        
+
         lockout_msg = QLabel(
             f"⛔ Too many failed login attempts.\n\n"
             f"Your account is locked for:\n"
@@ -851,45 +874,45 @@ class PasswordDialog(QDialog):
         lockout_msg.setWordWrap(True)
         lockout_msg.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(lockout_msg)
-        
+
         self.lockout_timer = QTimer(self)
         self.lockout_timer.timeout.connect(lambda: self.update_lockout_display(lockout_msg))
         self.lockout_timer.start(1000)
-        
+
         exit_btn = QPushButton("Exit Application")
         exit_btn.setObjectName("ExitBtn")
         exit_btn.clicked.connect(self.reject_and_exit)
         layout.addWidget(exit_btn)
-        
+
         layout.addStretch()
-    
+
     def update_lockout_display(self, label):
         locked, remaining = is_locked_out()
-        
+
         if not locked:
             self.lockout_timer.stop()
             self.accept()
             return
-        
+
         minutes = remaining // 60
         seconds = remaining % 60
-        
+
         label.setText(
             f"⛔ Too many failed login attempts.\n\n"
             f"Your account is locked for:\n"
             f"{minutes} minutes and {seconds} seconds\n\n"
             f"Please try again later."
         )
-    
+
     def verify(self):
         if self.is_first_time:
             pass1 = self.pass_input.text()
             pass2 = self.pass_confirm.text()
-            
+
             if len(pass1) < 8:
                 QMessageBox.warning(
-                    self, 
-                    "Weak Password", 
+                    self,
+                    "Weak Password",
                     "Password must be at least 8 characters long.\n\n"
                     "Consider using:\n"
                     "• Mix of uppercase and lowercase\n"
@@ -897,17 +920,17 @@ class PasswordDialog(QDialog):
                     "• Avoid common words"
                 )
                 return
-            
+
             if pass1 != pass2:
                 QMessageBox.warning(self, "Password Mismatch", "Passwords don't match. Please try again.")
                 self.pass_confirm.clear()
                 return
-            
+
             self.password_hash = hash_password(pass1)
             CONFIG["APP_PASSWORD_HASH"] = self.password_hash
             CONFIG["FAILED_ATTEMPTS"] = 0
             CONFIG["LOCKOUT_UNTIL"] = ""
-            
+
             if save_config_file():
                 QMessageBox.information(
                     self,
@@ -932,14 +955,14 @@ class PasswordDialog(QDialog):
         else:
             entered_password = self.pass_input.text()
             stored_hash = CONFIG.get("APP_PASSWORD_HASH", "")
-            
+
             if verify_password(entered_password, stored_hash):
                 reset_failed_attempts()
                 self.accept()
             else:
                 failed_count = record_failed_attempt()
                 remaining = 10 - failed_count
-                
+
                 if remaining <= 0:
                     QMessageBox.critical(
                         self,
@@ -951,8 +974,8 @@ class PasswordDialog(QDialog):
                     self.reject_and_exit()
                 else:
                     QMessageBox.warning(
-                        self, 
-                        "Authentication Failed", 
+                        self,
+                        "Authentication Failed",
                         f"❌ Incorrect password!\n\n"
                         f"Remaining attempts: {remaining}/10\n\n"
                         f"After 10 failed attempts, the app will\n"
@@ -960,14 +983,14 @@ class PasswordDialog(QDialog):
                     )
                     self.pass_input.clear()
                     self.pass_input.setFocus()
-                    
+
                     self.close()
                     new_dialog = PasswordDialog(self.parent(), is_first_time=False)
                     if new_dialog.exec() == QDialog.DialogCode.Accepted:
                         self.accept()
                     else:
                         self.reject()
-    
+
     def reject_and_exit(self):
         self.reject()
         sys.exit(0)
@@ -986,30 +1009,30 @@ class SettingsDialog(QDialog):
             QPushButton:hover { background-color: #5649c0; }
         """)
         layout = QVBoxLayout(self)
-        
+
         warning = QLabel("🔒 SECURITY: Your API keys are protected by your password.")
         warning.setStyleSheet("color: #4CAF50; margin-bottom: 10px; padding: 10px; background-color: rgba(76,175,80,0.1); border-radius: 5px;")
         layout.addWidget(warning)
-        
+
         info = QLabel(f"Config file location:\n{CONFIG_FILE}")
         info.setStyleSheet("color: #888; margin-bottom: 10px; font-size: 11px;")
         info.setWordWrap(True)
         layout.addWidget(info)
-        
+
         form = QFormLayout()
         self.inputs = {}
-        
+
         excluded_keys = ["APP_PASSWORD_HASH", "FAILED_ATTEMPTS", "LOCKOUT_UNTIL"]
         for key in DEFAULT_CONFIG.keys():
             if key in excluded_keys:
                 continue
-            
+
             lbl = key.replace("_API_KEY", "").replace("_", " ")
             inp = QLineEdit(CONFIG[key])
             inp.setEchoMode(QLineEdit.EchoMode.Password)
             self.inputs[key] = inp
             form.addRow(lbl + ":", inp)
-        
+
         layout.addLayout(form)
         btn = QPushButton("Save & Close")
         btn.clicked.connect(self.save)
@@ -1018,7 +1041,7 @@ class SettingsDialog(QDialog):
     def save(self):
         for k, i in self.inputs.items():
             val = i.text().strip()
-            if val: 
+            if val:
                 CONFIG[k] = val
         save_config_file()
         self.accept()
@@ -1041,7 +1064,7 @@ QPushButton#Success {{ background-color: #4CAF50; border: 1px solid #4CAF50; }}
 class IOCScannerApp(QMainWindow):
     def __init__(self):
         super().__init__()
-        
+
         if not CONFIG.get("APP_PASSWORD_HASH"):
             dialog = PasswordDialog(self, is_first_time=True)
             if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -1052,11 +1075,11 @@ class IOCScannerApp(QMainWindow):
                 dialog = PasswordDialog(self, is_first_time=False)
                 dialog.exec()
                 sys.exit(0)
-            
+
             dialog = PasswordDialog(self, is_first_time=False)
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 sys.exit(0)
-        
+
         self.setWindowTitle("IOC Scanner - Professional (Secured)")
         self.resize(1200, 850)
         self.central = QWidget()
@@ -1065,8 +1088,8 @@ class IOCScannerApp(QMainWindow):
         self.update_style()
         self.layout = QVBoxLayout(self.central)
         self.layout.setSpacing(15)
-        
-        self.scan_history = [] 
+
+        self.scan_history = []
 
         h_layout = QHBoxLayout()
         title = QLabel("Threat Intelligence Platform 🔒")
@@ -1095,7 +1118,7 @@ class IOCScannerApp(QMainWindow):
         self.status.setStyleSheet("color: #4CAF50; padding: 5px; font-weight: bold;")
         self.footer.addWidget(self.status)
         self.footer.addStretch()
-        
+
         btn_out = QPushButton("[-]")
         btn_out.setFixedSize(40, 30)
         btn_out.setObjectName("Sec")
@@ -1107,7 +1130,7 @@ class IOCScannerApp(QMainWindow):
         btn_in.setObjectName("Sec")
         btn_in.clicked.connect(lambda: self.change_font(2))
         self.footer.addWidget(btn_in)
-        
+
         self.layout.addLayout(self.footer)
 
     def update_style(self):
@@ -1132,9 +1155,9 @@ class IOCScannerApp(QMainWindow):
     # --- TAB 1: SCANNER ---
     def init_scanner(self):
         tab = QWidget(); lay = QVBoxLayout(tab)
-        
+
         f1 = QFrame(); f1.setObjectName("Glass"); l1 = QVBoxLayout(f1)
-        
+
         top_row = QHBoxLayout()
         top_row.addWidget(QLabel("Enter IOC", objectName="Head"))
         top_row.addStretch()
@@ -1147,7 +1170,7 @@ class IOCScannerApp(QMainWindow):
 
         self.inp = QLineEdit(); self.inp.setPlaceholderText("IP, Domain, Hash..."); self.inp.returnPressed.connect(self.scan)
         l1.addWidget(self.inp)
-        
+
         hb = QHBoxLayout()
         b_scan = QPushButton("🔍 Scan"); b_scan.clicked.connect(self.scan)
         b_clr = QPushButton("Clear"); b_clr.setObjectName("Sec"); b_clr.clicked.connect(self.inp.clear)
@@ -1159,17 +1182,17 @@ class IOCScannerApp(QMainWindow):
         hh = QHBoxLayout(); hh.addWidget(QLabel("Results", objectName="Head"))
         self.prog = QProgressBar(); self.prog.setRange(0,0); self.prog.setVisible(False); self.prog.setFixedWidth(150)
         hh.addWidget(self.prog); l2.addLayout(hh)
-        
+
         self.out = QTextBrowser()
         self.out.setOpenExternalLinks(True)
         self.out.setOpenLinks(False)
         self.out.anchorClicked.connect(lambda u: webbrowser.open(u.toString()))
         l2.addWidget(self.out)
-        
+
         self.cp_btn = QPushButton("📋 Copy Output"); self.cp_btn.setObjectName("Sec")
         self.cp_btn.clicked.connect(self.copy_effect)
         l2.addWidget(self.cp_btn)
-        
+
         lay.addWidget(f2)
         self.tabs.addTab(tab, "Single Scanner")
 
@@ -1178,7 +1201,7 @@ class IOCScannerApp(QMainWindow):
         mime.setHtml(self.out.toHtml())
         mime.setText(self.out.toPlainText())
         QGuiApplication.clipboard().setMimeData(mime)
-        
+
         self.cp_btn.setText("Copied! ✓")
         self.cp_btn.setObjectName("Success")
         self.cp_btn.setStyleSheet("background-color: #4CAF50; border: 1px solid #4CAF50;")
@@ -1196,16 +1219,16 @@ class IOCScannerApp(QMainWindow):
         if ioc not in self.scan_history:
             self.scan_history.insert(0, ioc)
             self.history_combo.clear()
-            self.history_combo.addItems(self.scan_history[:10]) 
+            self.history_combo.addItems(self.scan_history[:10])
 
     def scan(self):
-        ioc = self.inp.text().strip(); 
+        ioc = self.inp.text().strip();
         if not ioc: return
-        
+
         self.update_history(ioc)
-        self.inp.clear() 
+        self.inp.clear()
         self.out.clear(); self.prog.setVisible(True); self.status.setText(f"Scanning...")
-        
+
         self.worker = ScanWorker(ioc, self.ai)
         self.worker.fast_sig.connect(self.show_fast)
         self.worker.slow_sig.connect(self.show_slow)
@@ -1295,7 +1318,7 @@ class IOCScannerApp(QMainWindow):
     # LOGIC
     def do_defang(self): self.h_out.setText(self.h_in.toPlainText().replace(".", "[.]").replace("http", "hxxp"))
     def do_refang(self): self.h_out.setText(self.h_in.toPlainText().replace("[.]", ".").replace("hxxp", "http"))
-    def do_b64d(self): 
+    def do_b64d(self):
         try: self.h_out.setText(base64.b64decode(self.h_in.toPlainText()).decode('utf-8'))
         except: self.h_out.setText("Invalid Base64")
     def do_b64e(self): self.h_out.setText(base64.b64encode(self.h_in.toPlainText().encode('utf-8')).decode('utf-8'))
@@ -1318,9 +1341,9 @@ class IOCScannerApp(QMainWindow):
         self.e_out.setText("AI Analyzing..."); self.pw = PhishWorker(self.e_in.toPlainText(), self.ai)
         self.pw.done.connect(self.e_out.setText); self.pw.start()
 
+
 def main():
     """Main entry point for the application."""
-    # Ensure multiprocessing works correctly in frozen executables
     multiprocessing.freeze_support()
 
     app = QApplication(sys.argv)
