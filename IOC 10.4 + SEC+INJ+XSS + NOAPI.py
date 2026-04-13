@@ -71,10 +71,13 @@ def sanitize_ioc(ioc):
     """
     if not ioc:
         return None
-    
+
     # Convert to string and strip whitespace
     ioc = str(ioc).strip()
-    
+
+    if not ioc:
+        return None
+
     # Length validation (reasonable limit)
     if len(ioc) > 256:
         return None

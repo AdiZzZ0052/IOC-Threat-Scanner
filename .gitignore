@@ -8,6 +8,9 @@ ioc_scanner_config.json
 *config*.json
 *.key
 *.pem
+
+# Claude Code local settings
+.claude/
 *.env
 .env
 .env.*

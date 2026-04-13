@@ -90,6 +90,9 @@ def sanitize_ioc(ioc):
     # Convert to string and strip whitespace
     ioc = str(ioc).strip()
 
+    if not ioc:
+        return None
+
     # Length validation (reasonable limit)
     if len(ioc) > 256:
         return None
