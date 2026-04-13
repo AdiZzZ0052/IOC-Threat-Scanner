@@ -27,7 +27,7 @@ If applicable, add screenshots to help explain your problem.
 ## Environment
 - **OS**: [e.g., Windows 11, macOS 14, Ubuntu 22.04]
 - **Python Version**: [e.g., 3.11.0]
-- **IOC Scanner Version**: [e.g., 1.0.1]
+- **IOC Scanner Version**: [e.g., 1.0.7]
 
 ## Error Messages
 ```

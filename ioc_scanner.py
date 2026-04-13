@@ -2,7 +2,7 @@
 IOC Threat Scanner - Professional Threat Intelligence Platform
 Author: Adi Cohen
 License: MIT
-Version: 1.0.6
+Version: 1.0.7
 Repository: https://github.com/AdiZzZ0052/IOC-Threat-Scanner
 """
 
