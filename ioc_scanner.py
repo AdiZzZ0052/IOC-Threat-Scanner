@@ -31,12 +31,7 @@ import urllib.parse
 import ipaddress
 import webbrowser
 import email
-import threading
-import time
-import socket
 from datetime import datetime, timedelta
-import traceback
-import math
 import concurrent.futures
 import hashlib
 import html as html_lib  # For HTML escaping
@@ -548,7 +543,7 @@ def q_geo(ioc):
     # Query geo API
     try:
         r = requests.get(
-            f"http://ip-api.com/json/{target}?fields=status,country,city,isp,org,as",
+            f"https://ip-api.com/json/{target}?fields=status,country,city,isp,org,as",
             timeout=3
         )
         if r.status_code == 200:
@@ -753,8 +748,14 @@ class PhishWorker(QThread):
         self.txt = txt
         self.ai = ai
     def run(self):
-        res = self.ai.phish(self.txt)
-        self.done.emit(f"=== AI PHISHING VERDICT ===\n\n{res}")
+        if not self.ai:
+            self.done.emit("AI is not configured. Please add a Bytez API key in Settings.")
+            return
+        try:
+            res = self.ai.phish(self.txt)
+            self.done.emit(f"=== AI PHISHING VERDICT ===\n\n{res}")
+        except Exception as e:
+            self.done.emit(f"AI analysis failed: {str(e)}")
 
 # ===================== PASSWORD DIALOG =====================
 class PasswordDialog(QDialog):
@@ -985,13 +986,6 @@ class PasswordDialog(QDialog):
                     )
                     self.pass_input.clear()
                     self.pass_input.setFocus()
-
-                    self.close()
-                    new_dialog = PasswordDialog(self.parent(), is_first_time=False)
-                    if new_dialog.exec() == QDialog.DialogCode.Accepted:
-                        self.accept()
-                    else:
-                        self.reject()
 
     def reject_and_exit(self):
         self.reject()
@@ -1333,7 +1327,7 @@ class IOCScannerApp(QMainWindow):
         self.h_out.setText(f"Port {p}: {PORT_DATA.get(p, 'Unknown')}")
     def do_head(self):
         try:
-            msg = email.message_from_string(self.e_in.toPlainText())
+            msg = email.parser.Parser().parsestr(self.e_in.toPlainText())
             res = f"Subject: {msg.get('subject')}\nFrom: {msg.get('from')}\nTo: {msg.get('to')}\n\n"
             ips = re.findall(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', self.e_in.toPlainText())
             res += f"IPs Found: {list(set(ips))}"
