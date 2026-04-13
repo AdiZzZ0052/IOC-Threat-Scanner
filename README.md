@@ -148,6 +148,11 @@ On first launch, you'll be prompted to create a master password to protect your 
 ---
 
 ## Screenshots
+<img width="1196" height="853" alt="image" src="https://github.com/user-attachments/assets/9bc601bc-6931-49c5-9ddb-90f89b88c377" />
+
+<img width="1191" height="856" alt="image" src="https://github.com/user-attachments/assets/0f6f736b-956f-4d25-bd9d-796469ca97e1" />
+
+
 
 ### Main Scanner Interface
 ```
