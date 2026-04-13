@@ -151,6 +151,9 @@ For users in high-security environments:
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 1.0.7 | 2026 | CI code quality fix; version shown in app title |
+| 1.0.6 | 2026 | Removed DNS lookups; sanitize_ioc whitespace fix |
+| 1.0.4 | 2025 | EXE freeze support; safe auto-install |
 | 1.0.1 | 2025 | Added XSS prevention, input sanitization |
 | 1.0.0 | 2025 | Initial release with password protection |
 

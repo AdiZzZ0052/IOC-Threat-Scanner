@@ -27,7 +27,7 @@ def read_requirements():
 
 setup(
     name='ioc-threat-scanner',
-    version='1.0.6',
+    version='1.0.7',
     author='Adi Cohen',
     author_email='adi.cohen@example.com',  # Update with your email
     description='Professional IOC Threat Intelligence Platform',

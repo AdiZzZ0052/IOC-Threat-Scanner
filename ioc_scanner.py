@@ -6,7 +6,7 @@ Version: 1.0.6
 Repository: https://github.com/AdiZzZ0052/IOC-Threat-Scanner
 """
 
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 __author__ = "Adi Cohen"
 __license__ = "MIT"
 
@@ -192,7 +192,6 @@ def reset_failed_attempts():
 # ===================== FILE OPERATIONS =====================
 def load_config():
     """Load configuration with error handling"""
-    global CONFIG
     if os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE, 'r') as f:
@@ -1083,7 +1082,7 @@ class IOCScannerApp(QMainWindow):
             if dialog.exec() != QDialog.DialogCode.Accepted:
                 sys.exit(0)
 
-        self.setWindowTitle("IOC Scanner - Professional (Secured)")
+        self.setWindowTitle(f"IOC-Threat-Scanner-v{__version__} - Professional (Secured)")
         self.resize(1200, 850)
         self.central = QWidget()
         self.setCentralWidget(self.central)
