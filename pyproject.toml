@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ioc-threat-scanner"
-version = "1.0.1"
+version = "1.0.6"
 description = "Professional IOC Threat Intelligence Platform"
 readme = "README.md"
 license = {text = "MIT"}
@@ -33,13 +33,13 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Security",
 ]
 requires-python = ">=3.8"
 dependencies = [
     "PyQt6>=6.4.0",
     "requests>=2.28.0",
-    "duckduckgo-search>=3.0.0",
     "bytez>=0.1.0",
 ]
 
@@ -69,7 +69,7 @@ ioc-scanner-gui = "ioc_scanner:main"
 
 [tool.black]
 line-length = 100
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312', 'py313']
 include = '\.pyi?$'
 
 [tool.isort]

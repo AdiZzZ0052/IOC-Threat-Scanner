@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2026-04-13
+
+### Fixed
+- `sanitize_ioc()` now correctly returns `None` for whitespace-only input instead of empty string
+
+### Security
+- Removed DNS lookups (`socket.gethostbyname`) — replaced with passive VirusTotal API lookup to prevent privacy leaks
+- Added `.claude/` to `.gitignore` to prevent local tool settings from being committed
+
+### Changed
+- Removed `duckduckgo-search` dependency (not used in current codebase)
+- Updated version across `pyproject.toml` and `setup.py` to stay in sync
+- Added Python 3.13 classifier support
+
+## [1.0.5] - 2026-01-15
+
+### Added
+- PyInstaller `.spec` file for building standalone EXE
+
+## [1.0.4] - 2025-12-01
+
+### Fixed
+- Prevented infinite process spawning when running as a frozen EXE (`multiprocessing.freeze_support()`)
+- `install_dependencies()` now skips when running as frozen EXE
+
+## [1.0.2] - 2025-06-01
+
+### Added
+- Password protection with SHA-256 hashing and brute-force lockout
+- AI-powered phishing detection via Bytez (Mistral-7B)
+- Hybrid Analysis and URLScan.io integrations
+
 ## [1.0.1] - 2025-01-31
 
 ### Added

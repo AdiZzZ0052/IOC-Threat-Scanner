@@ -23,11 +23,11 @@ def read_requirements():
         with open(req_path, 'r', encoding='utf-8') as f:
             return [line.strip() for line in f
                     if line.strip() and not line.startswith('#')]
-    return ['PyQt6>=6.4.0', 'requests>=2.28.0', 'duckduckgo-search>=3.0.0', 'bytez>=0.1.0']
+    return ['PyQt6>=6.4.0', 'requests>=2.28.0', 'bytez>=0.1.0']
 
 setup(
     name='ioc-threat-scanner',
-    version='1.0.1',
+    version='1.0.6',
     author='Adi Cohen',
     author_email='adi.cohen@example.com',  # Update with your email
     description='Professional IOC Threat Intelligence Platform',
@@ -55,6 +55,7 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
         'Topic :: Security',
         'Topic :: Internet',
         'Topic :: System :: Networking :: Monitoring',
